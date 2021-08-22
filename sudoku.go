@@ -1,53 +1,86 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+	"log"
 	"os"
+	"strconv"
+	"strings"
 )
 
+var logFatal = log.Fatal
+
 // Due to the game design, the size of the board also is the max possible value, and is also used as such
-/*const size = 9
+const size = 9
 const emptyValue = 0
 
 type game struct {
 	grid [size][size]int
-}*/
+}
 
 func main() {
 
 	arguments := os.Args
 
-		var newStr string
-	
-		for i := 1; i < len(arguments); i++ {
-			if len(arguments) == 10 {
-				for j := 0; j <= 9; j++ {
-					for _, char := range arguments[i] {
-						if char >= '1' && char <= '9' || char == '.' {
-							newStr = string(arguments[i])
-						} else {
-							fmt.Println(j)
-							fmt.Println("Number is duplicated in one argument")
+	var newStr string
+	isReapeated := false
+	isValidChar := false
+
+	if len(arguments) == 1 {
+		fmt.Println("Error")
+	}
+
+	for i := 1; i < len(arguments); i++ {
+
+		if len(arguments) == 10 && len(arguments[i]) == 9 {
+
+			if !isReapeated && !isValidChar {
+
+				for j := 0; j < len(arguments[i]); j++ {
+
+					if string(arguments[i][j]) == "." || (string(arguments[i][j]) > "0" && string(arguments[i][j]) <= "9") && !isValidChar {
+
+						strReapeated := strings.Count(arguments[i], string(arguments[i][j]))
+
+						if strReapeated > 1 && string(arguments[i][j]) > "0" && string(arguments[i][j]) <= "9" && !isReapeated {
+							fmt.Println("Error")
+							isReapeated = true
+							break
 						}
+
+					} else {
+						fmt.Println("Error")
+						isValidChar = true
+						break
 					}
 				}
-			} else {
-				fmt.Println("Invalid number of arguments")
 			}
-			fmt.Println(newStr)
-		}
-}
-	
-	// test "096008510" "096008510" "110008510" "096222210" "033308510" "000008510" "096008510" "475085101" "096425880"
-	//loadAndSolveGame(newStr)
 
-/*func loadAndSolveGame(rawData string) {
-	game := loadGame(rawData)
-	fmt.Println("Initial board:")
-	displayGame(game)
-	fmt.Println("Solving it...")
-	solution := solve(game)
-	fmt.Println("Solution:")
+			newStr += string(arguments[i])
+		} else {
+			fmt.Println("Error")
+			break
+		}
+
+	}
+
+	if len(newStr) == 81 {
+		strToResolve := strings.ReplaceAll(newStr, ".", "0")
+		loadAndSolveGame(strToResolve)
+
+	}
+}
+
+func loadAndSolveGame(rawData string) {
+	game, err := loadGame(rawData)
+	if err != nil {
+		logFatal(err)
+	}
+	solution, err := solve(game)
+	if err != nil {
+		logFatal(err)
+	}
 	displayGame(solution)
 }
 
@@ -57,15 +90,11 @@ func displayGame(game game) {
 	}
 }
 
-
-//Takes a string as an input, made of numbers, where each number is a case in the grid (0 means empty)
-//E.g.: 004300209005009001070060043006002087190007400050083000600000105003508690042910300
-
-func loadGame(rawData string) game {
+func loadGame(rawData string) (game, error) {
 	game := game{}
 	array := strings.Split(rawData, "")
 	if len(array) != (size * size) {
-		return game
+		return game, errors.New("incorrect size for game raw data")
 	}
 	for i := 0; i < size; i++ {
 		for j := 0; j < size; j++ {
@@ -73,14 +102,14 @@ func loadGame(rawData string) game {
 			if err == nil && val >= emptyValue && val <= size {
 				game.grid[i][j] = val
 			} else {
-				return game
+				return game, errors.New("unable to parse valid int")
 			}
 		}
 	}
 	if !isValidGame(game) {
-		return game
+		return game, errors.New("invalid game")
 	}
-	return game
+	return game, nil
 }
 
 func isValidGame(game game) bool {
@@ -129,33 +158,37 @@ func isGameOver(game game) bool {
 	return true
 }
 
-func solve(game game) game {
+func solve(game game) (game, error) {
 	if isGameOver(game) {
-		return game
+		return game, nil
 	}
 
-	i, j := findEmptyCase(game)
+	i, j, err := findEmptyCase(game)
+	if err != nil {
+		return game, err
+	}
 
 	for val := 1; val <= size; val++ {
 		game.grid[i][j] = val
 		if isValidGame(game) {
-			solve(game)
+			solution, err := solve(game)
+			if err == nil {
+				return solution, nil
+			}
 		}
 		game.grid[i][j] = emptyValue
 	}
 
-	return game
+	return game, errors.New("unable to solve game")
 }
 
-func findEmptyCase(game game) (int, int) {
+func findEmptyCase(game game) (int, int, error) {
 	for i, line := range game.grid {
 		for j, val := range line {
 			if val == emptyValue {
-				return i, j
+				return i, j, nil
 			}
 		}
 	}
-	return -1, -1
+	return -1, -1, errors.New("no empty case found")
 }
-*/
-
