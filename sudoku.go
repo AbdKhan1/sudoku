@@ -1,8 +1,8 @@
 package main
 
 import (
-	"errors"
 	"fmt"
+	"errors"
 	"log"
 	"os"
 	"strconv"
@@ -26,6 +26,7 @@ func main() {
 	var newStr string
 	isReapeated := false
 	isValidChar := false
+        isValidFormat:= true
 
 	if len(arguments) == 1 {
 		fmt.Println("Error")
@@ -46,6 +47,7 @@ func main() {
 						if strReapeated > 1 && string(arguments[i][j]) > "0" && string(arguments[i][j]) <= "9" && !isReapeated {
 							fmt.Println("Error")
 							isReapeated = true
+                                                        isValidFormat= false
 							break
 						}
 
@@ -65,7 +67,7 @@ func main() {
 
 	}
 
-	if len(newStr) == 81 {
+	if len(newStr) == 81 && isValidFormat {
 		strToResolve := strings.ReplaceAll(newStr, ".", "0")
 		loadAndSolveGame(strToResolve)
 
@@ -192,3 +194,5 @@ func findEmptyCase(game game) (int, int, error) {
 	}
 	return -1, -1, errors.New("no empty case found")
 }
+
+
